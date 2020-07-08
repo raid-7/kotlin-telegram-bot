@@ -152,6 +152,8 @@ class Dispatcher(
 
     private val commandHandlers = mutableMapOf<String, ArrayList<Handler>>()
     private val errorHandlers = arrayListOf<HandleError>()
+
+    @Volatile
     private var stopped = false
 
     fun startCheckingUpdates() {
@@ -162,11 +164,19 @@ class Dispatcher(
     private fun checkQueueUpdates() {
         while (!Thread.currentThread().isInterrupted && !stopped) {
             val item = updatesQueue.take()
-            when (item) {
-                is Update -> handleUpdate(item)
-                is TelegramError -> handleError(item)
-                else -> Unit
-            }
+            processQueueItem(item)
+        }
+
+        val remaining = mutableListOf<DispatchableObject>()
+        updatesQueue.drainTo(remaining)
+        remaining.forEach(::processQueueItem)
+    }
+
+    private fun processQueueItem(item: DispatchableObject) {
+        when (item) {
+            is Update -> handleUpdate(item)
+            is TelegramError -> handleError(item)
+            else -> Unit
         }
     }
 

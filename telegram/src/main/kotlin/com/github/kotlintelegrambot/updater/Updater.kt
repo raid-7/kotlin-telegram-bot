@@ -9,6 +9,8 @@ import java.util.concurrent.Executors
 class Updater {
     private val executor: Executor = Executors.newCachedThreadPool()
     private var lastUpdateId = 0L
+
+    @Volatile
     private var stopped = false
 
     lateinit var bot: Bot
